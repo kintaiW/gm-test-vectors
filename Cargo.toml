@@ -1,0 +1,15 @@
+[package]
+name = "gm-testgen"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "gm-testgen"
+path = "src/main.rs"
+
+[dependencies]
+gm-sdk-rs = { git = "ssh://git@github.com/kintaiW/gm-sdk-rs.git", branch = "main" }
+clap = { version = "4", features = ["derive"] }
+rand = "0.8.5"
+hex = "0.4"
+crypto-bigint = "0.6.0"
