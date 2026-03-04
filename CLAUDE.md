@@ -14,7 +14,7 @@ cargo run -- verify --input ./output                             # verify test v
 
 Subcommands: `generate` (with `--algo`, `--count`, `--output`) and `verify` (with `--input`).
 
-**Prerequisites**: SSH access to `git@github.com:kintaiW/gm-sdk-rs.git`. Cargo must be configured with `net.git-fetch-with-cli = true` in `~/.cargo/config.toml` if ssh-agent isn't available.
+**Prerequisites**: HTTPS access to `https://github.com/kintaiW/gm-sdk-rs.git`.
 
 ## Architecture
 

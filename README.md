@@ -34,7 +34,7 @@
 cargo build --release
 ```
 
-> 需要 SSH 访问 GitHub 以拉取 gm-sdk-rs 依赖。
+> 需要 HTTPS 访问 GitHub 以拉取 gm-sdk-rs 依赖。
 
 ## CLI 用法
 
