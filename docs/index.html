@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>gm-testgen - 国密算法测试向量工具</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --border: #334155;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --green: #4ade80;
+    --orange: #fb923c;
+    --red: #f87171;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  /* header */
+  .hero {
+    text-align: center;
+    padding: 5rem 1rem 3rem;
+    background: linear-gradient(180deg, #1e293b 0%, var(--bg) 100%);
+  }
+  .hero h1 { font-size: 2.8rem; font-weight: 700; letter-spacing: -0.02em; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { margin-top: .8rem; font-size: 1.15rem; color: var(--text-dim); max-width: 600px; margin-inline: auto; }
+  .hero .warning {
+    display: inline-block;
+    margin-top: 1.5rem;
+    padding: .5rem 1.2rem;
+    border: 1px solid var(--orange);
+    border-radius: 6px;
+    color: var(--orange);
+    font-size: .85rem;
+  }
+  .badges { margin-top: 1.5rem; display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
+  .badges a img { height: 22px; }
+
+  /* layout */
+  .container { max-width: 960px; margin: 0 auto; padding: 0 1.5rem; }
+  section { padding: 3rem 0; }
+  section + section { border-top: 1px solid var(--border); }
+  h2 { font-size: 1.5rem; margin-bottom: 1.2rem; color: var(--accent); }
+
+  /* features */
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.2rem; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+  }
+  .card h3 { font-size: 1.1rem; margin-bottom: .4rem; }
+  .card p { color: var(--text-dim); font-size: .92rem; }
+
+  /* algorithm table */
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  th, td { text-align: left; padding: .6rem .8rem; border-bottom: 1px solid var(--border); }
+  th { color: var(--accent); font-weight: 600; white-space: nowrap; }
+  td:first-child { font-weight: 600; }
+  .tag {
+    display: inline-block;
+    padding: .1rem .5rem;
+    border-radius: 4px;
+    font-size: .8rem;
+    font-weight: 500;
+  }
+  .tag-sm2 { background: #312e81; color: #a5b4fc; }
+  .tag-sm3 { background: #064e3b; color: #6ee7b7; }
+  .tag-sm4 { background: #7c2d12; color: #fdba74; }
+
+  /* code blocks */
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    font-size: .88rem;
+    line-height: 1.6;
+    margin: .8rem 0;
+  }
+  code { font-family: "JetBrains Mono", "Fira Code", Consolas, monospace; }
+  .prompt { color: var(--green); }
+  .comment { color: var(--text-dim); }
+
+  /* download */
+  .platforms { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
+  .platform-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem;
+    text-align: center;
+  }
+  .platform-card .icon { font-size: 2rem; margin-bottom: .4rem; }
+  .platform-card h4 { font-size: .95rem; margin-bottom: .2rem; }
+  .platform-card p { font-size: .78rem; color: var(--text-dim); }
+
+  /* format sample */
+  .format-sample {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+  }
+  @media (max-width: 640px) { .format-sample { grid-template-columns: 1fr; } }
+  .format-sample pre { margin: 0; }
+  .format-label { font-size: .85rem; color: var(--text-dim); margin-bottom: .4rem; }
+
+  /* pipeline */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+  }
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .5rem 1rem;
+    font-size: .88rem;
+  }
+  .arrow { color: var(--text-dim); font-size: 1.2rem; }
+
+  /* footer */
+  footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text-dim);
+    font-size: .82rem;
+    border-top: 1px solid var(--border);
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1><span>gm-testgen</span></h1>
+  <p>国密算法（SM2 / SM3 / SM4）正确性测试向量生成与验证 CLI 工具</p>
+  <div class="warning">本项目仅供学习和开发测试使用，请勿用于商用密码产品送检现场测试</div>
+</div>
+
+<div class="container">
+
+  <!-- Features -->
+  <section>
+    <h2>核心能力</h2>
+    <div class="features">
+      <div class="card">
+        <h3>生成测试向量</h3>
+        <p>调用 gm-sdk-rs 加密/签名 API，随机生成测试数据，经过「生成 → 自验证」循环后写入文件，确保每条向量的正确性。</p>
+      </div>
+      <div class="card">
+        <h3>验证测试向量</h3>
+        <p>读取指定目录下的向量文件，根据文件名自动识别算法和模式，逐条调用密码算法进行反向验证。</p>
+      </div>
+      <div class="card">
+        <h3>多平台发布</h3>
+        <p>GitHub Actions 自动编译 Linux / Windows / macOS（x64 + ARM）四个平台，推送 tag 即发布到 Releases。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Algorithms -->
+  <section>
+    <h2>支持的算法与模式</h2>
+    <table>
+      <thead>
+        <tr><th>算法</th><th>模式</th><th>输出文件</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="tag tag-sm2">SM2</span></td><td>加密 / 解密</td><td>SM2_加密_N（解密格式）.txt &nbsp; SM2_解密_N.txt</td></tr>
+        <tr><td><span class="tag tag-sm2">SM2</span></td><td>签名 / 验签</td><td>SM2验签_预处理后_N.txt &nbsp; SM2签名_预处理后_N（验签格式）.txt</td></tr>
+        <tr><td><span class="tag tag-sm3">SM3</span></td><td>哈希</td><td>SM3_N.txt</td></tr>
+        <tr><td><span class="tag tag-sm3">SM3</span></td><td>HMAC</td><td>SM3_HMAC_N.txt</td></tr>
+        <tr><td><span class="tag tag-sm4">SM4</span></td><td>ECB</td><td>SM4_ECB_加密.txt &nbsp; SM4_ECB_解密.txt</td></tr>
+        <tr><td><span class="tag tag-sm4">SM4</span></td><td>CBC</td><td>SM4_CBC_加密.txt &nbsp; SM4_CBC_解密.txt</td></tr>
+        <tr><td><span class="tag tag-sm4">SM4</span></td><td>CFB</td><td>SM4_CFB_加密.txt &nbsp; SM4_CFB_解密.txt</td></tr>
+        <tr><td><span class="tag tag-sm4">SM4</span></td><td>OFB</td><td>SM4_OFB_加密.txt &nbsp; SM4_OFB_解密.txt</td></tr>
+        <tr><td><span class="tag tag-sm4">SM4</span></td><td>CTR</td><td>SM4_CTR_加密.txt &nbsp; SM4_CTR_解密.txt</td></tr>
+        <tr><td><span class="tag tag-sm4">SM4</span></td><td>GCM</td><td>SM4_GCM_加密.txt &nbsp; SM4_GCM_解密.txt</td></tr>
+        <tr><td><span class="tag tag-sm4">SM4</span></td><td>XTS</td><td>SM4_XTS_加密.txt &nbsp; SM4_XTS_解密.txt</td></tr>
+        <tr><td><span class="tag tag-sm4">SM4</span></td><td>CBC-MAC</td><td>SM4_CBCMAC.txt</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Usage -->
+  <section>
+    <h2>CLI 用法</h2>
+    <pre><code><span class="comment"># 生成全部算法的测试向量（默认 10 组）</span>
+<span class="prompt">$</span> gm-testgen generate
+
+<span class="comment"># 指定算法、数量和输出目录</span>
+<span class="prompt">$</span> gm-testgen generate --algo sm4 --count 20 --output ./my-vectors
+
+<span class="comment"># 验证指定目录下的测试向量</span>
+<span class="prompt">$</span> gm-testgen verify --input ./output</code></pre>
+
+    <p style="margin-top:.8rem; color: var(--text-dim); font-size:.9rem;">
+      <code>generate</code> 参数：<code>--algo</code>（sm2 | sm3 | sm4 | all）、<code>--count</code>（数量）、<code>--output</code>（输出目录）<br>
+      <code>verify</code> 参数：<code>--input</code>（向量文件目录）
+    </p>
+  </section>
+
+  <!-- File format -->
+  <section>
+    <h2>文件格式</h2>
+    <p style="color: var(--text-dim); font-size:.92rem; margin-bottom: 1rem;">
+      纯文本 <code>key= value</code> 格式，记录间以空行分隔。数值为十六进制编码。
+    </p>
+    <div class="format-sample">
+      <div>
+        <div class="format-label">SM4-ECB 加密向量示例</div>
+        <pre><code>密钥= 5587062E39AFE9A9...
+明文长度= 00000010
+明文= 000B19036EE415A7...
+密文= 09C0D4B85DEC824F...</code></pre>
+      </div>
+      <div>
+        <div class="format-label">SM4-GCM 加密向量示例</div>
+        <pre><code>密钥= fb83b360672...
+IV= a866034148d371cf1f4ffb75
+aad= 7eb4cfb7b238924a...
+明文= 8b2d0d31f7e87f0b...
+密文= c55eb571e179b414...
+tag= acc746161d168749...</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- CI/CD -->
+  <section>
+    <h2>CI/CD 流水线</h2>
+    <div class="pipeline">
+      <div class="step">git tag v*</div>
+      <div class="arrow">&rarr;</div>
+      <div class="step">GitHub Actions</div>
+      <div class="arrow">&rarr;</div>
+      <div class="step">4 平台并行编译</div>
+      <div class="arrow">&rarr;</div>
+      <div class="step">GitHub Releases</div>
+    </div>
+    <pre><code><span class="prompt">$</span> git tag v0.1.0
+<span class="prompt">$</span> git push --tags
+<span class="comment"># Actions 自动触发 → Releases 页面发布多平台二进制</span></code></pre>
+  </section>
+
+  <!-- Download -->
+  <section>
+    <h2>下载</h2>
+    <p style="color: var(--text-dim); font-size:.92rem;">推送版本标签后，在 GitHub Releases 页面获取预编译程序：</p>
+    <div class="platforms">
+      <div class="platform-card">
+        <div class="icon">&#128039;</div>
+        <h4>Linux x64</h4>
+        <p>x86_64-unknown-linux-gnu<br>.tar.gz</p>
+      </div>
+      <div class="platform-card">
+        <div class="icon">&#9726;</div>
+        <h4>Windows x64</h4>
+        <p>x86_64-pc-windows-msvc<br>.zip</p>
+      </div>
+      <div class="platform-card">
+        <div class="icon">&#63743;</div>
+        <h4>macOS x64</h4>
+        <p>x86_64-apple-darwin<br>.tar.gz</p>
+      </div>
+      <div class="platform-card">
+        <div class="icon">&#63743;</div>
+        <h4>macOS ARM</h4>
+        <p>aarch64-apple-darwin<br>.tar.gz</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech stack -->
+  <section>
+    <h2>技术栈</h2>
+    <table>
+      <tbody>
+        <tr><td>语言</td><td>Rust (Edition 2021)</td></tr>
+        <tr><td>密码库</td><td>gm-sdk-rs (sm2 / sm3 / sm4 纯 Rust 实现)</td></tr>
+        <tr><td>CLI 框架</td><td>clap v4 (derive)</td></tr>
+        <tr><td>CI/CD</td><td>GitHub Actions (matrix build, auto release)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+<footer>
+  gm-testgen &mdash; 基于 <a href="https://github.com/kintaiW/gm-sdk-rs">gm-sdk-rs</a> 构建 &nbsp;|&nbsp; 仅供学习和开发测试使用
+</footer>
+
+</body>
+</html>

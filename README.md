@@ -90,3 +90,26 @@ gm-testgen verify --input ./samples
 - 数值均为十六进制编码
 - SM4 GCM/XTS 模式使用小写 hex，其余使用大写 hex
 - 长度字段为 8 位十六进制（如 `00000010` 表示 16 字节）
+
+## CI/CD
+
+项目使用 GitHub Actions 实现全自动构建和发布。
+
+**CI**（`.github/workflows/ci.yml`）：每次推送到 `main` 或提交 PR 时自动运行 build + test。
+
+**Release**（`.github/workflows/release.yml`）：推送 `v*` 标签时自动触发，并行编译 4 个平台的 release 二进制，打包后发布到 GitHub Releases。
+
+```bash
+# 发布流程
+git tag v0.1.0
+git push --tags
+```
+
+发布的平台和产物：
+
+| 平台 | Target | 产物 |
+|------|--------|------|
+| Linux x64 | `x86_64-unknown-linux-gnu` | `gm-testgen-vX.Y.Z-x86_64-unknown-linux-gnu.tar.gz` |
+| Windows x64 | `x86_64-pc-windows-msvc` | `gm-testgen-vX.Y.Z-x86_64-pc-windows-msvc.zip` |
+| macOS x64 | `x86_64-apple-darwin` | `gm-testgen-vX.Y.Z-x86_64-apple-darwin.tar.gz` |
+| macOS ARM | `aarch64-apple-darwin` | `gm-testgen-vX.Y.Z-aarch64-apple-darwin.tar.gz` |
