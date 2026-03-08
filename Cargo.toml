@@ -8,7 +8,7 @@ name = "gm-testgen"
 path = "src/main.rs"
 
 [dependencies]
-gm-sdk-rs = { git = "https://github.com/kintaiW/gm-sdk-rs.git", branch = "main" }
+libsmx = "0.1"
 clap = { version = "4", features = ["derive"] }
 rand = "0.8.5"
 hex = "0.4"

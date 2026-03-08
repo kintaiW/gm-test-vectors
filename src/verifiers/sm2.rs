@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use gm_sdk::{sm2_decrypt, sm2_sign_verify};
+use libsmx::sm2::{self, PrivateKey};
 use crate::parser::{Record, get_field, hex_to_bytes, hex_to_array};
 
 /// 公钥从 64 字节（x||y）加上 04 前缀 -> 65 字节
@@ -31,15 +31,16 @@ pub fn verify_sm2_decrypt(path: &Path, records: &[Record]) -> Result<(usize, usi
         let ct_hex = get_field(record, "密文")?;
         let expected_pt_hex = get_field(record, "明文")?;
 
-        let pri_key: [u8; 32] = hex_to_array(pri_key_hex)?;
+        let pri_key_bytes: [u8; 32] = hex_to_array(pri_key_hex)?;
+        let pri_key = PrivateKey::from_bytes(&pri_key_bytes)
+            .map_err(|e| format!("私钥解析失败: {:?}", e))?;
         let ct_raw = hex_to_bytes(ct_hex)?;
         let expected_pt = hex_to_bytes(expected_pt_hex)?;
 
-        // 加上 C1 的 04 前缀
         let ct_full = ciphertext_add_c1_prefix(&ct_raw);
 
-        match sm2_decrypt(&pri_key, &ct_full) {
-            Some(decrypted) => {
+        match sm2::decrypt(&pri_key, &ct_full) {
+            Ok(decrypted) => {
                 if decrypted == expected_pt {
                     passed += 1;
                 } else {
@@ -49,10 +50,10 @@ pub fn verify_sm2_decrypt(path: &Path, records: &[Record]) -> Result<(usize, usi
                     );
                 }
             }
-            None => {
+            Err(e) => {
                 eprintln!(
-                    "  [FAIL] {}: 记录 #{} SM2 解密失败",
-                    path.display(), i + 1
+                    "  [FAIL] {}: 记录 #{} SM2 解密失败: {:?}",
+                    path.display(), i + 1, e
                 );
             }
         }
@@ -77,7 +78,7 @@ pub fn verify_sm2_sign(path: &Path, records: &[Record]) -> Result<(usize, usize)
         let e: [u8; 32] = hex_to_array(e_hex)?;
         let sig: [u8; 64] = hex_to_array(sig_hex)?;
 
-        match sm2_sign_verify(&e, &pub_key, &sig) {
+        match sm2::verify(&e, &pub_key, &sig) {
             Ok(()) => {
                 passed += 1;
             }

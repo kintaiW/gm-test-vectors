@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use gm_sdk::{sm3_hash, hmac_sm3};
+use libsmx::sm3::{Sm3Hasher, hmac_sm3};
 use crate::parser::{Record, get_field, hex_to_bytes};
 
 /// 验证 SM3 哈希测试向量文件
@@ -13,7 +13,7 @@ pub fn verify_sm3(path: &Path, records: &[Record]) -> Result<(usize, usize), Str
         let expected_hash_hex = get_field(record, "杂凑值")?;
 
         let msg = hex_to_bytes(msg_hex)?;
-        let hash = sm3_hash(&msg);
+        let hash = Sm3Hasher::digest(&msg);
         let actual_hex = hex::encode_upper(&hash);
 
         if actual_hex.eq_ignore_ascii_case(expected_hash_hex) {

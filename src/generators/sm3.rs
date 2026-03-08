@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use gm_sdk::{sm3_hash, hmac_sm3};
+use libsmx::sm3::{Sm3Hasher, hmac_sm3};
 use crate::format::write_records_to_file;
 use crate::utils::*;
 
@@ -15,11 +15,9 @@ pub fn generate_sm3(output_dir: &Path, count: usize) -> std::io::Result<()> {
         let msg_len = SM3_DATA_LENGTHS[i % SM3_DATA_LENGTHS.len()];
         let msg = random_bytes(msg_len);
 
-        // 计算哈希
-        let hash = sm3_hash(&msg);
+        let hash = Sm3Hasher::digest(&msg);
 
-        // 自验证：SM3 是确定性的，再算一次确认一致
-        let hash_verify = sm3_hash(&msg);
+        let hash_verify = Sm3Hasher::digest(&msg);
         assert_eq!(hash, hash_verify, "SM3 自验证失败");
 
         records.push(vec![
@@ -44,10 +42,8 @@ pub fn generate_sm3_hmac(output_dir: &Path, count: usize) -> std::io::Result<()>
         let key = random_bytes(32);
         let msg = random_bytes(msg_len);
 
-        // 计算 HMAC
         let mac = hmac_sm3(&key, &msg);
 
-        // 自验证
         let mac_verify = hmac_sm3(&key, &msg);
         assert_eq!(mac, mac_verify, "SM3 HMAC 自验证失败");
 

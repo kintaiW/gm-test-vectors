@@ -1,11 +1,11 @@
 use std::path::Path;
 
-use gm_sdk::{
+use libsmx::sm4::{
     sm4_encrypt_ecb, sm4_decrypt_ecb,
     sm4_encrypt_cbc, sm4_decrypt_cbc,
     sm4_encrypt_cfb, sm4_decrypt_cfb,
-    sm4_encrypt_ofb, sm4_decrypt_ofb,
-    sm4_encrypt_ctr, sm4_decrypt_ctr,
+    sm4_crypt_ofb,
+    sm4_crypt_ctr,
     sm4_encrypt_gcm, sm4_decrypt_gcm,
     sm4_encrypt_xts, sm4_decrypt_xts,
 };
@@ -70,8 +70,7 @@ pub fn verify_sm4_cbc_encrypt(path: &Path, records: &[Record]) -> Result<(usize,
         let pt = hex_to_bytes(get_field(record, "明文")?)?;
         let expected_ct_hex = get_field(record, "密文")?;
 
-        let mut ct = vec![0u8; pt.len()];
-        sm4_encrypt_cbc(&key, &iv, &pt, &mut ct);
+        let ct = sm4_encrypt_cbc(&key, &iv, &pt);
         if check_hex_eq(&ct, expected_ct_hex) {
             passed += 1;
         } else {
@@ -91,8 +90,7 @@ pub fn verify_sm4_cbc_decrypt(path: &Path, records: &[Record]) -> Result<(usize,
         let ct = hex_to_bytes(get_field(record, "密文")?)?;
         let expected_pt_hex = get_field(record, "明文")?;
 
-        let mut pt = vec![0u8; ct.len()];
-        sm4_decrypt_cbc(&key, &iv, &ct, &mut pt);
+        let pt = sm4_decrypt_cbc(&key, &iv, &ct);
         if check_hex_eq(&pt, expected_pt_hex) {
             passed += 1;
         } else {
@@ -156,7 +154,7 @@ pub fn verify_sm4_ofb_encrypt(path: &Path, records: &[Record]) -> Result<(usize,
         let pt = hex_to_bytes(get_field(record, "明文")?)?;
         let expected_ct_hex = get_field(record, "密文")?;
 
-        let ct = sm4_encrypt_ofb(&key, &iv, &pt);
+        let ct = sm4_crypt_ofb(&key, &iv, &pt);
         if check_hex_eq(&ct, expected_ct_hex) {
             passed += 1;
         } else {
@@ -176,7 +174,7 @@ pub fn verify_sm4_ofb_decrypt(path: &Path, records: &[Record]) -> Result<(usize,
         let ct = hex_to_bytes(get_field(record, "密文")?)?;
         let expected_pt_hex = get_field(record, "明文")?;
 
-        let pt = sm4_decrypt_ofb(&key, &iv, &ct);
+        let pt = sm4_crypt_ofb(&key, &iv, &ct);
         if check_hex_eq(&pt, expected_pt_hex) {
             passed += 1;
         } else {
@@ -198,7 +196,7 @@ pub fn verify_sm4_ctr_encrypt(path: &Path, records: &[Record]) -> Result<(usize,
         let pt = hex_to_bytes(get_field(record, "明文")?)?;
         let expected_ct_hex = get_field(record, "密文")?;
 
-        let ct = sm4_encrypt_ctr(&key, &counter, &pt);
+        let ct = sm4_crypt_ctr(&key, &counter, &pt);
         if check_hex_eq(&ct, expected_ct_hex) {
             passed += 1;
         } else {
@@ -218,7 +216,7 @@ pub fn verify_sm4_ctr_decrypt(path: &Path, records: &[Record]) -> Result<(usize,
         let ct = hex_to_bytes(get_field(record, "密文")?)?;
         let expected_pt_hex = get_field(record, "明文")?;
 
-        let pt = sm4_decrypt_ctr(&key, &counter, &ct);
+        let pt = sm4_crypt_ctr(&key, &counter, &ct);
         if check_hex_eq(&pt, expected_pt_hex) {
             passed += 1;
         } else {
@@ -297,7 +295,8 @@ pub fn verify_sm4_xts_encrypt(path: &Path, records: &[Record]) -> Result<(usize,
         let key2: [u8; 16] = key_full[16..32].try_into()
             .map_err(|_| "XTS 密钥长度不足".to_string())?;
 
-        let ct = sm4_encrypt_xts(&key1, &key2, &tweak, &pt);
+        let ct = sm4_encrypt_xts(&key1, &key2, &tweak, &pt)
+            .map_err(|e| format!("SM4-XTS 加密失败: {:?}", e))?;
         if check_hex_eq(&ct, expected_ct_hex) {
             passed += 1;
         } else {
@@ -322,7 +321,8 @@ pub fn verify_sm4_xts_decrypt(path: &Path, records: &[Record]) -> Result<(usize,
         let key2: [u8; 16] = key_full[16..32].try_into()
             .map_err(|_| "XTS 密钥长度不足".to_string())?;
 
-        let pt = sm4_decrypt_xts(&key1, &key2, &tweak, &ct);
+        let pt = sm4_decrypt_xts(&key1, &key2, &tweak, &ct)
+            .map_err(|e| format!("SM4-XTS 解密失败: {:?}", e))?;
         if check_hex_eq(&pt, expected_pt_hex) {
             passed += 1;
         } else {
@@ -336,12 +336,10 @@ pub fn verify_sm4_xts_decrypt(path: &Path, records: &[Record]) -> Result<(usize,
 
 /// CBC-MAC：使用 SM4-CBC 加密，取最后一个分组作为 MAC
 fn sm4_cbc_mac(key: &[u8; 16], iv: &[u8; 16], data: &[u8]) -> [u8; 16] {
-    let data_len = data.len();
-    let mut ciphertext = vec![0u8; data_len];
-    sm4_encrypt_cbc(key, iv, data, &mut ciphertext);
+    let ciphertext = sm4_encrypt_cbc(key, iv, data);
 
     let mut mac = [0u8; 16];
-    mac.copy_from_slice(&ciphertext[data_len - 16..]);
+    mac.copy_from_slice(&ciphertext[data.len() - 16..]);
     mac
 }
 

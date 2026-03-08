@@ -1,14 +1,14 @@
 # gm-testgen
 
-国密算法（SM2/SM3/SM4）正确性测试样本生成与验证工具。
+国密算法（SM2/SM3/SM4）正确性测试样本生成与验证工具
 
-基于 [gm-sdk-rs](https://github.com/kintaiW/gm-sdk-rs) 密码库，生成标准格式的测试向量文件，并支持对已有样本进行反向验证。
+基于 [libsmx](https://crates.io/crates/libsmx) 密码库，生成标准格式的测试向量文件，并支持对已有样本进行反向验证。
 
 > **WARNING**: 本项目仅供学习和开发测试使用，请勿用于商用密码产品送检现场测试。
 
 ## 功能
 
-- **生成测试向量**：调用 gm-sdk-rs 的加密/签名 API，随机生成测试数据，经过"生成-自验证"循环后输出
+- **生成测试向量**：调用 libsmx 的加密/签名 API，随机生成测试数据，经过"生成-自验证"循环后输出
 - **验证测试向量**：读取指定目录下的测试向量文件，自动识别文件类型，调用对应的密码算法进行正确性验证
 
 ### 支持的算法和模式
@@ -33,8 +33,6 @@
 ```bash
 cargo build --release
 ```
-
-> 需要 HTTPS 访问 GitHub 以拉取 gm-sdk-rs 依赖。
 
 ## CLI 用法
 
@@ -61,9 +59,6 @@ gm-testgen generate --algo sm2
 ```bash
 # 验证指定目录下的所有测试向量文件
 gm-testgen verify --input ./output
-
-# 验证其他来源的样本
-gm-testgen verify --input ./samples
 ```
 
 参数说明：
